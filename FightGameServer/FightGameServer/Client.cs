@@ -9,13 +9,16 @@ namespace FightGameServer
     class Client
     {
         public static int dataBufferSize = 4096;
+
         public int id;
         public TCP tcp;
+        public UDP udp;
 
         public Client(int ClientID)
         {
             id = ClientID;
             tcp = new TCP(id);
+            udp = new UDP(id);
         }
 
         public class TCP
@@ -133,6 +136,44 @@ namespace FightGameServer
                 }
 
                 return false;
+            }
+        }
+
+        public class UDP
+        {
+            public IPEndPoint endPoint;
+
+            private int id;
+
+            public UDP(int ID)
+            {
+                id = ID;
+            }
+
+            public void Connect(IPEndPoint _endPoint)
+            {
+                endPoint = _endPoint;
+                ServerSend.UDPTest(id);
+            }
+
+            public void SendData(Packet packet)
+            {
+                GameServer.SendUDPData(endPoint, packet);
+            }
+
+            public void HandleData(Packet packetData)
+            {
+                int packetLength = packetData.ReadInt();
+                byte[] packetBytes = packetData.ReadBytes(packetLength);
+
+                ThreadManager.ExecuteOnMainThread(() =>
+                {
+                    using (Packet packet = new Packet(packetBytes))
+                    {
+                        int packetId = packet.ReadInt();
+                        GameServer.packetHandlers[packetId](id, packet);
+                    }
+                });
             }
         }
     }

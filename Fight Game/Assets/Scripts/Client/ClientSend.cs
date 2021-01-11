@@ -10,6 +10,12 @@ public class ClientSend : MonoBehaviour
         GameClientNetcode.instance.tcp.SendData(packet);
     }
 
+    private static void SendUDPData(Packet packet)
+    {
+        packet.WriteLength();
+        GameClientNetcode.instance.udp.SendData(packet);
+    }
+
     #region Packets
     public static void WelcomeReceived()
     {
@@ -21,5 +27,15 @@ public class ClientSend : MonoBehaviour
             SendTCPData(packet);
         }
     }
+    public static void UDPTestReceived()
+    {
+        using (Packet packet = new Packet((int)ClientPackets.updTestReceived))
+        {
+            packet.Write("Received a UDP packet.");
+
+            SendUDPData(packet);
+        }
+    }
+
     #endregion
 }
