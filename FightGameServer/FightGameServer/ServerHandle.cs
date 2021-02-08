@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 
 namespace FightGameServer
@@ -16,13 +17,19 @@ namespace FightGameServer
             {
                 Console.WriteLine($"Player \"{username}\" (ID: {fromClient}) has assumed the wrong client ID ({clientIdCheck})!");
             }
-            // TODO: send player into game
+            GameServer.clients[fromClient].SendIntoGame(username);
         }
-        public static void UDPTestReceived(int fromClient, Packet packet)
-        {
-            string msg = packet.ReadString();
 
-            Console.WriteLine($"Received packet via UDP. Contains message: {msg}");
+        public static void PlayerMovement(int fromClient, Packet packet)
+        {
+            bool[] inputs = new bool[packet.ReadInt()];
+            for (int i = 0; i < inputs.Length; i++)
+            {
+                inputs[i] = packet.ReadBool();
+            }
+            Quaternion rotation = packet.ReadQuaternion();
+
+            GameServer.clients[fromClient].player.SetInput(inputs, rotation);
         }
     }
 }

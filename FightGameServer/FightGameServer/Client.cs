@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.Numerics;
 
 namespace FightGameServer
 {
@@ -11,6 +12,7 @@ namespace FightGameServer
         public static int dataBufferSize = 4096;
 
         public int id;
+        public Player player;
         public TCP tcp;
         public UDP udp;
 
@@ -153,7 +155,6 @@ namespace FightGameServer
             public void Connect(IPEndPoint _endPoint)
             {
                 endPoint = _endPoint;
-                ServerSend.UDPTest(id);
             }
 
             public void SendData(Packet packet)
@@ -174,6 +175,30 @@ namespace FightGameServer
                         GameServer.packetHandlers[packetId](id, packet);
                     }
                 });
+            }
+        }
+
+        public void SendIntoGame(string playerName)
+        {
+            player = new Player(id, playerName, new Vector3(0, 0, 0));
+
+            foreach (Client client in GameServer.clients.Values)
+            {
+                if (client.player != null)
+                {
+                    if (client.id != id)
+                    {
+                        ServerSend.SpawnPlayer(id, client.player);
+                    }
+                }
+            }
+
+            foreach (Client client in GameServer.clients.Values)
+            {
+                if (client.player != null)
+                {
+                    ServerSend.SpawnPlayer(client.id, player);
+                }
             }
         }
     }
